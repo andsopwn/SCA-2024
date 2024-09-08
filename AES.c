@@ -57,6 +57,8 @@ u8 RSbox[256] = {
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     };
 
+u32 Rcons[10] = { 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000 };
+
 u32 u4byte_in(u8 *x) {
     return (x[0] << 24) | (x[1] << 16) | (x[2] << 8) | x[3];
 }
@@ -70,14 +72,12 @@ void u4byte_out(u8 *x, u32 y) {
 
 void AES_KeyWordToByte(u32 *W, u8 *RK) {
     int i;
-    for(i = 0 ; i < 44 ; i++)
+    for(i = 0 ; i < 60 ; i++)
     u4byte_out(RK + 4 * i, W[i]);
 }
 
-u32 Rcons[10] = { 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000 };
-
 void RoundkeyGeneration128(u8 *MK, u8 *RK) {
-    u32 W[44];
+    u32 W[60] = { 0x00, };
     int i;
     u32 T;
 
@@ -86,12 +86,9 @@ void RoundkeyGeneration128(u8 *MK, u8 *RK) {
     W[2] = u4byte_in(MK + 8);
     W[3] = u4byte_in(MK + 12);
 
-    for(i = 0 ; i < 10 ; i++)
-    {
-        //T = G_func(W[4 * i + 3])
+    for(i = 0 ; i < 10 ; i++) {
         T = W[4 * i + 3];
-        T = RotWord(T);
-        T = SubWord(T);
+        T = SubWord(RotWord(T));
         T ^= Rcons[i];
 
         W[4 * i + 4] = W[4 * i] ^ T;
@@ -102,10 +99,82 @@ void RoundkeyGeneration128(u8 *MK, u8 *RK) {
     AES_KeyWordToByte(W, RK);
 }
 
+void RoundkeyGeneration192(u8 *MK, u8 *RK) {
+    u32 W[60] = { 0x00, };
+    int i;
+    u32 T;
+
+    W[0] = u4byte_in(MK);
+    W[1] = u4byte_in(MK + 4);
+    W[2] = u4byte_in(MK + 8);
+    W[3] = u4byte_in(MK + 12);
+    W[4] = u4byte_in(MK + 16);
+    W[5] = u4byte_in(MK + 20);
+
+
+    for(i = 0 ; i < 8 ; i++) {
+        T = W[6 * i + 5];
+        T = SubWord(RotWord(T));
+        T ^= Rcons[i];
+        W[6 * i + 6] = W[6 * i] ^ T;
+        W[6 * i + 7] = W[6 * i + 1] ^ W[6 * i + 6];
+        W[6 * i + 8] = W[6 * i + 2] ^ W[6 * i + 7];
+        W[6 * i + 9] = W[6 * i + 3] ^ W[6 * i + 8];
+        W[6 * i + 10] = W[6 * i + 4] ^ W[6 * i + 9];
+        W[6 * i + 11] = W[6 * i + 5] ^ W[6 * i + 10];
+    }
+
+    for(i = 0 ; i < 52 ; i++) {
+        if(i % 4 == 0) printf("%2dR ", i/4);
+        printf("%08X ", W[i]);
+        if(i % 4 == 3) puts("");
+    }
+    AES_KeyWordToByte(W, RK);
+}
+
+void RoundkeyGeneration256(u8 *MK, u8 *RK) {
+    u32 W[60] = { 0x00, };
+    int i;
+    u32 T;
+
+    W[0] = u4byte_in(MK);
+    W[1] = u4byte_in(MK + 4);
+    W[2] = u4byte_in(MK + 8);
+    W[3] = u4byte_in(MK + 12);
+    W[4] = u4byte_in(MK + 16);
+    W[5] = u4byte_in(MK + 20);
+    W[6] = u4byte_in(MK + 24);
+    W[7] = u4byte_in(MK + 28);
+
+
+    for(i = 0 ; i < 7 ; i++) {
+        T = W[8 * i + 7];
+        T = SubWord(RotWord(T));
+        T ^= Rcons[i];
+        W[8 * i + 8] = W[8 * i] ^ T;
+        W[8 * i + 9] = W[8 * i + 1] ^ W[8 * i + 8];
+        W[8 * i + 10] = W[8 * i + 2] ^ W[8 * i + 9];
+        W[8 * i + 11] = W[8 * i + 3] ^ W[8 * i + 10];
+        if(i == 6) break;
+        T = SubWord(W[8 * i + 11]);
+        W[8 * i + 12] = W[8 * i + 4] ^ T; 
+        W[8 * i + 13] = W[8 * i + 5] ^ W[8 * i + 12];
+        W[8 * i + 14] = W[8 * i + 6] ^ W[8 * i + 13];
+        W[8 * i + 15] = W[8 * i + 7] ^ W[8 * i + 14];
+    }
+    for(i = 0 ; i < 60 ; i++) {
+        if(i % 4 == 0) printf("%2dR ", i/4);
+        printf("%08X ", W[i]);
+        if(i % 4 == 3) puts("");
+    }
+    AES_KeyWordToByte(W, RK);
+}
+
 void AES_KeySchedule(u8 *MK, u8 *RK, int keysize) {
     if(keysize == 128)    RoundkeyGeneration128(MK, RK);
-    //if(keysize == 192)    RoundkeyGeneration192(MK, RK);
-    //if(keysize == 256)    RoundkeyGeneration256(MK, RK);
+    if(keysize == 192)    RoundkeyGeneration192(MK, RK);
+    if(keysize == 256)    RoundkeyGeneration256(MK, RK);
+    else { puts("keysize Error"); exit(-1); }
 }
 
 void AddRoundKey(u8 *S, u8 *RK) {
@@ -190,7 +259,7 @@ void AES_ENC(u8 *PT, u8 *RK, u8 *CT, int keysize) {
     }
     SubBytes(CT);
     Shiftrows(CT);
-    AddRoundKey(CT, RK + 16 * 10);
+    AddRoundKey(CT, RK + 16 * Nr);
 }
 
 void AES_DEC(u8 *PT, u8 *RK, u8 *CT, int keysize) {
@@ -199,11 +268,12 @@ void AES_DEC(u8 *PT, u8 *RK, u8 *CT, int keysize) {
     for(i = 0 ; i < 16 ; i++)
         CT[i] = PT[i];
 
-    AddRoundKey(CT, RK + 16 * 10);
-    for(int i = 0 ; i < Nr - 1 ; i++) {
+    AddRoundKey(CT, RK + 16 * Nr);
+    for(int i = 0 ; i < Nr - 1 ; i++)
+    {
         InvShiftrows(CT);
         InvSubBytes(CT);
-        AddRoundKey(CT, RK + (16 * 9) - 16 * i);
+        AddRoundKey(CT, RK + (16 * (Nr-1)) - 16 * i);
         InvMixcolumns(CT);
     }
     InvShiftrows(CT);
@@ -213,23 +283,27 @@ void AES_DEC(u8 *PT, u8 *RK, u8 *CT, int keysize) {
 
 int main() {
     int i;
-    u8 MK[32] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 };
+    u8 MK[32] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00 };
     u8 RK[240] = { 0x00, };
     u8 C0[16] = { 0x00, };
     u8 C1[16] = { 0x01, };
-    int keysize = 128;
+    int keysize = 256;
 
+    AES_KeySchedule(MK, RK, keysize);
+
+    printf("before encrypt \t");
     for(i = 0 ; i < 16 ; i++) printf("%02x ", C0[i]);
     puts("");
-    AES_KeySchedule(MK, RK, keysize);
     AES_ENC(C0, RK, C0, keysize);
 
+    printf("after encrypt \t");
     for(i = 0 ; i < 16 ; i++) printf("%02x ", C0[i]);
     puts("");
-/*
+
+    printf("after decrypt \t");
     AES_DEC(C0, RK, C0, keysize);
     for(i = 0 ; i < 16 ; i++) printf("%02x ", C0[i]);
     puts("");
-*/
+
 
 }
