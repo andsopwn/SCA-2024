@@ -123,12 +123,6 @@ void RoundkeyGeneration192(u8 *MK, u8 *RK) {
         W[6 * i + 10] = W[6 * i + 4] ^ W[6 * i + 9];
         W[6 * i + 11] = W[6 * i + 5] ^ W[6 * i + 10];
     }
-
-    for(i = 0 ; i < 52 ; i++) {
-        if(i % 4 == 0) printf("%2dR ", i/4);
-        printf("%08X ", W[i]);
-        if(i % 4 == 3) puts("");
-    }
     AES_KeyWordToByte(W, RK);
 }
 
@@ -162,18 +156,13 @@ void RoundkeyGeneration256(u8 *MK, u8 *RK) {
         W[8 * i + 14] = W[8 * i + 6] ^ W[8 * i + 13];
         W[8 * i + 15] = W[8 * i + 7] ^ W[8 * i + 14];
     }
-    for(i = 0 ; i < 60 ; i++) {
-        if(i % 4 == 0) printf("%2dR ", i/4);
-        printf("%08X ", W[i]);
-        if(i % 4 == 3) puts("");
-    }
     AES_KeyWordToByte(W, RK);
 }
 
 void AES_KeySchedule(u8 *MK, u8 *RK, int keysize) {
     if(keysize == 128)    RoundkeyGeneration128(MK, RK);
-    if(keysize == 192)    RoundkeyGeneration192(MK, RK);
-    if(keysize == 256)    RoundkeyGeneration256(MK, RK);
+    else if(keysize == 192)    RoundkeyGeneration192(MK, RK);
+    else if(keysize == 256)    RoundkeyGeneration256(MK, RK);
     else { puts("keysize Error"); exit(-1); }
 }
 
@@ -287,7 +276,7 @@ int main() {
     u8 RK[240] = { 0x00, };
     u8 C0[16] = { 0x00, };
     u8 C1[16] = { 0x01, };
-    int keysize = 256;
+    int keysize = 128; // 192, 256
 
     AES_KeySchedule(MK, RK, keysize);
 
