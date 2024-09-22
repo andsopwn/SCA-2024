@@ -88,11 +88,7 @@ void AES_KeySchedule(u8 *MK, u8 *RK, int keysize) {
         W[3] = u4byte_in(MK + 12);
 
         for(i = 0 ; i < 10 ; i++) {
-            T = W[4 * i + 3];
-            T = SubWord(RotWord(T));
-            T ^= Rcons[i];
-
-            W[4 * i + 4] = W[4 * i] ^ T;
+            W[4 * i + 4] = W[4 * i] ^ (SubWord(RotWord(W[4 * i + 3]))) ^ Rcons[i];
             W[4 * i + 5] = W[4 * i + 1] ^ W[4 * i + 4];
             W[4 * i + 6] = W[4 * i + 2] ^ W[4 * i + 5];
             W[4 * i + 7] = W[4 * i + 3] ^ W[4 * i + 6];
@@ -108,10 +104,7 @@ void AES_KeySchedule(u8 *MK, u8 *RK, int keysize) {
 
 
         for(i = 0 ; i < 8 ; i++) {
-            T = W[6 * i + 5];
-            T = SubWord(RotWord(T));
-            T ^= Rcons[i];
-            W[6 * i + 6] = W[6 * i] ^ T;
+            W[6 * i + 6] = W[6 * i] ^ (SubWord(RotWord(W[6 * i + 5]))) ^ Rcons[i];
             W[6 * i + 7] = W[6 * i + 1] ^ W[6 * i + 6];
             W[6 * i + 8] = W[6 * i + 2] ^ W[6 * i + 7];
             W[6 * i + 9] = W[6 * i + 3] ^ W[6 * i + 8];
@@ -130,16 +123,12 @@ void AES_KeySchedule(u8 *MK, u8 *RK, int keysize) {
         W[7] = u4byte_in(MK + 28);
 
         for(i = 0 ; i < 7 ; i++) {
-            T = W[8 * i + 7];
-            T = SubWord(RotWord(T));
-            T ^= Rcons[i];
-            W[8 * i + 8] = W[8 * i] ^ T;
+            W[8 * i + 8] = W[8 * i] ^ (SubWord(RotWord(W[8 * i + 7]))) ^ Rcons[i];
             W[8 * i + 9] = W[8 * i + 1] ^ W[8 * i + 8];
             W[8 * i + 10] = W[8 * i + 2] ^ W[8 * i + 9];
             W[8 * i + 11] = W[8 * i + 3] ^ W[8 * i + 10];
             if(i == 6) break;
-            T = SubWord(W[8 * i + 11]);
-            W[8 * i + 12] = W[8 * i + 4] ^ T; 
+            W[8 * i + 12] = W[8 * i + 4] ^ (SubWord(W[8 * i + 11]));
             W[8 * i + 13] = W[8 * i + 5] ^ W[8 * i + 12];
             W[8 * i + 14] = W[8 * i + 6] ^ W[8 * i + 13];
             W[8 * i + 15] = W[8 * i + 7] ^ W[8 * i + 14];
@@ -260,7 +249,7 @@ int main() {
     u8 RK[240] = { 0x00, };
     u8 C0[16] = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
     u8 C1[16] = { 0x01, };
-    int keysize = 128;
+    int keysize = 256;
 
     AES_KeySchedule(MK, RK, keysize);
 
