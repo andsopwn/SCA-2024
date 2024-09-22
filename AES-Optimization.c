@@ -477,7 +477,7 @@ void AES_ENC_Optimization(u8 *PT, u8 *CT, u32 *W, int keysize) {
         S3 = (Te2[(T3 >> 24)] & 0xff000000) ^ (Te3[(T0 >> 16) & 0xff] & 0x00ff0000) ^ (Te0[(T1 >> 8) & 0xff] & 0x0000ff00) ^ (Te1[T2 & 0xff] & 0x000000ff) ^ W[59];
     }
     else { exit(-1); }
-    
+
     u4byte_out(CT, S0);
     u4byte_out(CT + 4, S1);
     u4byte_out(CT + 8, S2);
@@ -627,18 +627,6 @@ void AES_KeySchedule_Optimization(u8 *MK, int keysize) {
             W[i * 4 + 6] = W[i * 4 + 2] ^ W[i * 4 + 5];
             W[i * 4 + 7] = W[i * 4 + 3] ^ W[i * 4 + 6];
         }
-        for(int i = 0 ; i < 44 ; i++) Wd[i] = W[i];
-        for(int i = 0 ; i < 44 ; i++) u4byte_out(RK + i * 4, W[i]);
-        for(int i = 1 ; i < 10 ; i++) { 
-            for(int k = 0; k < 16; k += 4) {
-            T[k]     = MULE(RK[i * 16 + k]) ^ MULB(RK[i * 16 + k + 1]) ^ MULD(RK[i * 16 + k + 2]) ^ MUL9(RK[i * 16 + k + 3]);
-            T[k + 1] = MUL9(RK[i * 16 + k]) ^ MULE(RK[i * 16 + k + 1]) ^ MULB(RK[i * 16 + k + 2]) ^ MULD(RK[i * 16 + k + 3]);
-            T[k + 2] = MULD(RK[i * 16 + k]) ^ MUL9(RK[i * 16 + k + 1]) ^ MULE(RK[i * 16 + k + 2]) ^ MULB(RK[i * 16 + k + 3]);
-            T[k + 3] = MULB(RK[i * 16 + k]) ^ MULD(RK[i * 16 + k + 1]) ^ MUL9(RK[i * 16 + k + 2]) ^ MULE(RK[i * 16 + k + 3]);
-            }
-            for(int k = 0 ; k < 16 ; k++) RK[i * 16 + k] = T[k];
-        }
-        for(int i = 0; i < 44 ; i++)    Wd[i] = u4byte_in(RK + i * 4);
     }
     else if(keysize == 192) {
         for(i = 0 ; i < 6 ; i++)
@@ -652,19 +640,6 @@ void AES_KeySchedule_Optimization(u8 *MK, int keysize) {
             W[6 * i + 10] = W[6 * i + 4] ^ W[6 * i + 9];
             W[6 * i + 11] = W[6 * i + 5] ^ W[6 * i + 10];
         }
-
-        for(int i = 0 ; i < 60 ; i++) Wd[i] = W[i];
-        for(int i = 0 ; i < 60 ; i++) u4byte_out(RK + i * 4, W[i]);
-        for(int i = 1 ; i < 10 ; i++) { 
-            for(int k = 0; k < 16; k += 4) {
-            T[k]     = MULE(RK[i * 16 + k]) ^ MULB(RK[i * 16 + k + 1]) ^ MULD(RK[i * 16 + k + 2]) ^ MUL9(RK[i * 16 + k + 3]);
-            T[k + 1] = MUL9(RK[i * 16 + k]) ^ MULE(RK[i * 16 + k + 1]) ^ MULB(RK[i * 16 + k + 2]) ^ MULD(RK[i * 16 + k + 3]);
-            T[k + 2] = MULD(RK[i * 16 + k]) ^ MUL9(RK[i * 16 + k + 1]) ^ MULE(RK[i * 16 + k + 2]) ^ MULB(RK[i * 16 + k + 3]);
-            T[k + 3] = MULB(RK[i * 16 + k]) ^ MULD(RK[i * 16 + k + 1]) ^ MUL9(RK[i * 16 + k + 2]) ^ MULE(RK[i * 16 + k + 3]);
-            }
-            for(int k = 0 ; k < 16 ; k++) RK[i * 16 + k] = T[k];
-        }
-        for(int i = 0; i < 44 ; i++)    Wd[i] = u4byte_in(RK + i * 4);
     }
     else if(keysize == 256) {
         for(i = 0 ; i < 8 ; i++)
@@ -683,6 +658,20 @@ void AES_KeySchedule_Optimization(u8 *MK, int keysize) {
         }
     }
     else { exit(-1); }
+
+    // Decryption Key Scheduling 
+    for(int i = 0 ; i < 60 ; i++) Wd[i] = W[i];
+        for(int i = 0 ; i < 60 ; i++) u4byte_out(RK + i * 4, W[i]);
+        for(int i = 1 ; i < keysize / 32 + 6 ; i++) { 
+            for(int k = 0; k < 16; k += 4) {
+            T[k]     = MULE(RK[i * 16 + k]) ^ MULB(RK[i * 16 + k + 1]) ^ MULD(RK[i * 16 + k + 2]) ^ MUL9(RK[i * 16 + k + 3]);
+            T[k + 1] = MUL9(RK[i * 16 + k]) ^ MULE(RK[i * 16 + k + 1]) ^ MULB(RK[i * 16 + k + 2]) ^ MULD(RK[i * 16 + k + 3]);
+            T[k + 2] = MULD(RK[i * 16 + k]) ^ MUL9(RK[i * 16 + k + 1]) ^ MULE(RK[i * 16 + k + 2]) ^ MULB(RK[i * 16 + k + 3]);
+            T[k + 3] = MULB(RK[i * 16 + k]) ^ MULD(RK[i * 16 + k + 1]) ^ MUL9(RK[i * 16 + k + 2]) ^ MULE(RK[i * 16 + k + 3]);
+            }
+            for(int k = 0 ; k < 16 ; k++) RK[i * 16 + k] = T[k];
+        }
+        for(int i = 0; i < 60 ; i++)    Wd[i] = u4byte_in(RK + i * 4);    
 }
 
 int main(int argc, char* argv[]) {
@@ -690,26 +679,23 @@ int main(int argc, char* argv[]) {
     u8       PT[16] = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
     u8       CT[16] = { 0x00, };
     u8       DE[16] = { 0x00, };
-    int      keysize    = 192;
+    int      keysize    = 256;
     clock_t  start = 0, finish = 0, time = 0;
 
     AES_KeySchedule_Optimization(MK, keysize);
 
     for(int i = 0 ; i < 60 ; i++) { printf("%08X ", W[i]); if(i % 4 == 3) puts(""); } puts("");
     for(int i = 0 ; i < 60 ; i++) { printf("%08X ", Wd[i]); if(i % 4 == 3) puts(""); } puts("");
-    
+
     printf("%s[states of vector]%s\n", COLOR_BLUE, COLOR_RESET);
     printf("%sPlaintext%s - ", COLOR_RED, COLOR_RESET); for(int i = 0 ; i < 16 ; i++)    printf("0x%02X, ", PT[i]); puts("");
     printf("%sMasterKey%s - ", COLOR_RED, COLOR_RESET); for(int i = 0 ; i < 16 ; i++)    printf("0x%02X, ", MK[i]); puts("\n");
-
-    printf("%s[Before vector]%s\n", COLOR_GREEN, COLOR_RESET);
-    printf("Ciphertext - "); for(int i = 0 ; i < 16 ; i++)    printf("0x%02X, ", CT[i]); puts("");
 
     start = clock();
     AES_ENC_Optimization(PT, CT, W, keysize);
     finish = clock();
 
-    puts(""); printf("%s[Encrypted vector]%s\n", COLOR_GREEN, COLOR_RESET);
+    printf("%s[Encrypted vector]%s\n", COLOR_GREEN, COLOR_RESET);
     printf("Ciphertext - "); for(int i = 0 ; i < 16 ; i++)    printf("0x%02X, ", CT[i]); puts("");
     printf("computation -> %s%lfsec%s\n", COLOR_RED, (double)(finish - start) / CLOCKS_PER_SEC, COLOR_RESET);
 
@@ -727,6 +713,6 @@ int main(int argc, char* argv[]) {
             exit(-1);
         }
     }
-        
+
     return 0;
 }
