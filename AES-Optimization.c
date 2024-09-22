@@ -6,8 +6,9 @@
 
 typedef unsigned char u8;
 typedef unsigned int u32;
-
-#define MUL2(a) (a<<1)^(a&0x80 ? 0x1b : 0)
+#define MUL2(a) (((a)<< 1)^((int8_t)((a)&0x80)>>7&0x1B))
+// conditional branch
+//#define MUL2(a) (a<<1)^(a&0x80 ? 0x1b : 0)
 #define MUL3(a) (MUL2(a))^(a)
 #define MUL4(a) MUL2((MUL2(a)))
 #define MUL8(a) MUL2((MUL2((MUL2(a)))))
