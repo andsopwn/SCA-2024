@@ -1,7 +1,7 @@
 typedef unsigned char u8;
 typedef unsigned int u32;
 
-#define MUL2(a) (a<<1)^(a&0x80 ? 0x1b : 0)
+#define MUL2(a) (((a)<< 1)^((int8_t)((a)&0x80)>>7&0x1B))
 #define MUL3(a) (MUL2(a))^(a)
 #define MUL4(a) MUL2((MUL2(a)))
 #define MUL8(a) MUL2((MUL2((MUL2(a)))))
@@ -11,11 +11,16 @@ typedef unsigned int u32;
 #define MULE(a) (MUL8(a))^(MUL4(a))^(MUL2(a))
 #define RotWord(x) ((x<<8) | (x>>24))
 #define SubWord(x)                        \
-   ((u32)Sbox[(u8)(x >> 24)] << 24)         \
-   | ((u32)Sbox[(u8)((x >> 16) & 0xff)] << 16) \
-   | ((u32)Sbox[(u8)((x >> 8) & 0xff)] << 8)   \
-   | ((u32)Sbox[(u8)(x & 0xff)])            \
-
+    ((u32)Sbox[(u8)(x >> 24)] << 24)         \
+    | ((u32)Sbox[(u8)((x >> 16) & 0xff)] << 16) \
+    | ((u32)Sbox[(u8)((x >> 8) & 0xff)] << 8)   \
+    | ((u32)Sbox[(u8)(x & 0xff)])            \
+    
+#define COLOR_RED	"\033[38;2;255;0;0m"
+#define COLOR_GREEN	"\033[92m"
+#define COLOR_BLUE  "\033[34m"
+#define BACK_RED    "\033[101m"
+#define COLOR_RESET	"\033[0m"
 
 u8 Sbox[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -329,7 +334,7 @@ u32 Td3[256] = {
     0xa8017139, 0x0cb3de08, 0xb4e49cd8, 0x56c19064, 0xcb84617b, 0x32b670d5, 0x6c5c7448, 0xb85742d0,
     };
 
-u32 Rcons[14] = { 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000, 0x6c000000, 0xd8000000, 0xab000000, 0x4d000000 };
+u32 Rcons[10] = { 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000 };
 
 u32      W[60]       = { 0x00, };   // 암호화 전용 키스케쥴
 u32      Wd[60]      = { 0x00, };   // 복호화 전용 키스케쥴
