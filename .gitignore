@@ -66,3 +66,7 @@ tempCodeRunnerFile.c
 # Side channel
 *.npy
 *.ets
+
+
+# MAC
+.DS_Store
