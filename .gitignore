@@ -62,3 +62,7 @@ dkms.conf
 .vscode/c_cpp_properties.json
 .gdb_history
 tempCodeRunnerFile.c
+
+# Side channel
+*.npy
+*.ets
