@@ -1,0 +1,15 @@
+For each byteIndex from 0 to 15:
+    Initialize maxCorrelation to 0
+    Initialize bestKeyGuess to 0
+    For each keyGuess from 0 to 255:
+        For each traceIndex from 0 to NUM_TRACES:
+            intermediateValue = Sbox[plaintext[traceIndex][byteIndex] XOR keyGuess]
+            hypotheticalPower[traceIndex] = HammingWeight(intermediateValue)
+        For each point from 0 to TRACE_LENGTH:
+            For each traceIndex from 0 to NUM_TRACES:
+                actualPower[traceIndex] = traces[traceIndex][point]
+            correlation = absolute value of calculateCorrelation(hypotheticalPower, actualPower)
+            If correlation > maxCorrelation:
+                maxCorrelation = correlation
+                bestKeyGuess = keyGuess
+    recoveredKey[byteIndex] = bestKeyGuess

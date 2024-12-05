@@ -118,7 +118,6 @@ int main()
 	double		cur, all;
 	FILE		*rfp, * wfp;
 	
-	printf("%s이서준%s의 젊고 유망한 SIDE CHANNEL\n", _grn_, _rst_);
 	sprintf(buf, "%s%s", DIR, traceFN);
 	rfp = fopen(buf, "rb");
 	if (rfp == NULL) { printf("%s 파일 읽기 오류", traceFN); exit(1); }
