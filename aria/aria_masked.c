@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define _rst_ "\033[0m"
+#define _red_ "\033[38;5;1m"
+#define _grn_ "\033[38;5;2m"
+
 typedef unsigned char u8;
 
 u8 ek[17][16] = { 0x00, };
@@ -248,6 +252,7 @@ void ARIA(u8* PT, u8* CT, u8 M1, u8 M2, u8 M3) {
     for (int i = 0; i < 16; i++)
         out[i] = PT[i] ^ ((i % 4 < 2) ? M2 : M1);
 
+    // 암호화 과정
     for(int i = 0; i < 11; i++) {
         if (i % 2 == 0) ENC_ODD(out, ek[i], te);
         else ENC_EVEN(out, ek[i], te);
@@ -262,13 +267,12 @@ void ARIA(u8* PT, u8* CT, u8 M1, u8 M2, u8 M3) {
     // XOR16 : 마스킹해제
     for (int i = 0; i < 16; i++)
         CT[i] = te[i] ^ ((i % 4 < 2) ? M2 : M1);
-    
 }
 
 int main() {
-    u8  PT[16] = { 0xDB, 0x3C, 0x31, 0xD7, 0x3A, 0x54, 0x9D, 0x66, 0x90, 0x4A, 0xF5, 0x2A, 0x0B, 0x5F, 0x43, 0xD9 };
+    u8  PT[16] = { 0x11, 0x11, 0x11, 0x11, 0xaa, 0xaa, 0xaa, 0xaa, 0x11, 0x11, 0x11, 0x11, 0xbb, 0xbb, 0xbb, 0xbb };
     u8  CT[16] = { 0x00, };
-    u8  MK[32] = { 0x47, 0x72, 0x33, 0x61, 0x74, 0x4A, 0x4F, 0x36, 0x59, 0x35, 0x55, 0x64, 0x49, 0x64, 0x69, 0x54 };
+    u8  MK[32] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
     u8  M1, M2, M3;
 
     srand(time(0));
@@ -287,18 +291,18 @@ int main() {
         MSBOX[3][c] = a;
     }
     
-    //puts("평문");
-    //for(int i = 0 ; i < 16 ; i++) printf("%02x ", PT[i]);
+    printf("MasterKey\t");
+    for(int i = 0 ; i < 16 ; i++) printf("%02X ", MK[i]);
+
+    printf("\nPlaintext\t%s", _grn_);
+    for(int i = 0 ; i < 16 ; i++) printf("%02X ", PT[i]);
 
     KeyExpansion(MK, M1, M2, M3);
     ARIA(PT, CT, M1, M2, M3);
 
-    //puts("랜덤값으로 마스킹된 평문");
-    //for(int i = 0 ; i < 16 ; i++) printf("%02x ", PT[i]);
-
-    puts("암호화");
+    printf("%s\nCiphertext\t%s", _rst_, _red_);
     for(int i = 0 ; i < 16 ; i++) printf("%02X ", CT[i]);
-    puts("\n83 9B 66 90 84 D3 D9 53 56 49 1B 0E 62 5F 0C CB <- MUST");
+    puts("");
 
     return 0;
 }
